@@ -6,7 +6,7 @@ from parallelx.loader import parse_workflow
 
 
 class TestEngine(unittest.TestCase):
-    def test_simple_run(self):
+    def test_simple_run(self) -> None:
         wf = parse_workflow({
             "name": "sum",
             "tasks": [
@@ -25,7 +25,7 @@ class TestEngine(unittest.TestCase):
             # cache should have at least some writes (misses)
             self.assertGreaterEqual(summary.cache_misses, 1)
 
-    def test_retry(self):
+    def test_retry(self) -> None:
         wf = parse_workflow({
             "name": "retry",
             "tasks": [
