@@ -3,15 +3,15 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from .engine import Engine, EngineConfig
 from .loader import WorkflowValidationError, load_workflow
 
 
-def _parse_tag_limits(s: str) -> Dict[str, int]:
+def _parse_tag_limits(s: str) -> dict[str, int]:
     """Parse 'io=2,cpu=8' into a dict."""
-    out: Dict[str, int] = {}
+    out: dict[str, int] = {}
     if not s.strip():
         return out
     for part in s.split(","):
@@ -74,7 +74,8 @@ def main(argv: Any = None) -> int:
         failed = 0
         skipped = 0
         for tid in sorted(wf.ids()):
-            st = outcomes.get(tid).status if tid in outcomes else None
+            outcome = outcomes.get(tid)
+            st = outcome.status if outcome is not None else None
             if st is not None and st.value == "SUCCESS":
                 ok += 1
             elif st is not None and st.value == "FAILED":
