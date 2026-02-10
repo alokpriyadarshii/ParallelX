@@ -85,7 +85,7 @@ class Engine:
         self.config = config
         self.cache = DiskCache(config.cache_dir) if config.cache_dir else None
 
-   def run(self, workflow: Workflow) -> tuple[dict[str, TaskOutcome], RunSummary]:        
+    def run(self, workflow: Workflow) -> tuple[dict[str, TaskOutcome], RunSummary]:      
         started = datetime.now(timezone.utc)
         t0 = now_ts()
 
@@ -103,8 +103,11 @@ class Engine:
         cache_hits = 0
         cache_misses = 0
 
+        tag_limits = {
+            tag: max(1, int(limit))
+            for tag, limit in self.config.max_concurrency_by_tag.items()
+        }
         tag_inflight: dict[str, int] = {k: 0 for k in tag_limits}
-        tag_inflight: Dict[str, int] = {k: 0 for k in tag_limits}
 
         def can_run(t: TaskSpec) -> bool:
             for tag in t.tags:
