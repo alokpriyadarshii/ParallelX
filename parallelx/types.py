@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class TaskStatus(str, Enum):
@@ -24,7 +24,7 @@ class ErrorInfo:
 class TaskOutcome:
     status: TaskStatus
     value: Any
-    error: Optional[ErrorInfo]
+    error: ErrorInfo | None
     started_at: float
     finished_at: float
     attempts: int
@@ -39,7 +39,7 @@ class RunSummary:
     workflow_name: str
     started_at_iso: str
     finished_at_iso: str
-    statuses: Dict[str, TaskStatus]
-    durations: Dict[str, float]
+    statuses: dict[str, TaskStatus]
+    durations: dict[str, float]
     cache_hits: int
     cache_misses: int
