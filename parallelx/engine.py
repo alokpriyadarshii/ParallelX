@@ -9,7 +9,7 @@ import time
 import traceback as tb
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any
 
 from .types import ErrorInfo, RunSummary, TaskOutcome, TaskStatus
 from .utils import DiskCache, import_func, now_ts, to_cache_key
@@ -20,16 +20,16 @@ from .workflow import TaskSpec, Workflow
 class EngineConfig:
     max_workers: int = max(1, (os.cpu_count() or 2) - 1)
     executor: str = "process"  # "process" or "thread"
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
     # Tag-based concurrency limits, e.g. {"io": 2, "cpu": 8}
-    max_concurrency_by_tag: Dict[str, int] = dataclasses.field(default_factory=dict)
+    max_concurrency_by_tag: dict[str, int] = dataclasses.field(default_factory=dict)
     # Set to True to also log task stdout/stderr (best effort)
     verbose: bool = False
     # Set to False to disable engine JSON-line logs (useful for tests/integration)
     emit_logs: bool = True
 
 
-def _resolve_refs(obj: Any, results: Dict[str, TaskOutcome]) -> Any:
+def _resolve_refs(obj: Any, results: dict[str, TaskOutcome]) -> Any:
     """Replace {"ref": "<task_id>"} with that task's output value."""
     if isinstance(obj, dict) and set(obj.keys()) == {"ref"} and isinstance(obj["ref"], str):
         ref_id = obj["ref"]
@@ -46,7 +46,7 @@ def _resolve_refs(obj: Any, results: Dict[str, TaskOutcome]) -> Any:
     return obj
 
 
-def _worker_call(func_path: str, kwargs: Dict[str, Any], timeout_seconds: Optional[float]) -> Any:
+def _worker_call(func_path: str, kwargs: dict[str, Any], timeout_seconds: float | None) -> Any:
     """Executed in worker process/thread.
 
     Notes on timeouts:
@@ -85,25 +85,25 @@ class Engine:
         self.config = config
         self.cache = DiskCache(config.cache_dir) if config.cache_dir else None
 
-    def run(self, workflow: Workflow) -> Tuple[Dict[str, TaskOutcome], RunSummary]:
+   def run(self, workflow: Workflow) -> tuple[dict[str, TaskOutcome], RunSummary]:        
         started = datetime.now(timezone.utc)
         t0 = now_ts()
 
         by_id = workflow.by_id()
-        deps_left: Dict[str, Set[str]] = {t.id: set(t.deps) for t in workflow.tasks}
-        dependents: Dict[str, Set[str]] = {t.id: set() for t in workflow.tasks}
+        deps_left: dict[str, set[str]] = {t.id: set(t.deps) for t in workflow.tasks}
+        dependents: dict[str, set[str]] = {t.id: set() for t in workflow.tasks}
         for t in workflow.tasks:
             for d in t.deps:
                 dependents[d].add(t.id)
 
-        ready: Set[str] = {tid for tid, deps in deps_left.items() if not deps}
-        running: Dict[cf.Future, str] = {}
-        outcomes: Dict[str, TaskOutcome] = {}
-        attempts: Dict[str, int] = {t.id: 0 for t in workflow.tasks}
+        ready: set[str] = {tid for tid, deps in deps_left.items() if not deps}
+        running: dict[cf.Future, str] = {}
+        outcomes: dict[str, TaskOutcome] = {}
+        attempts: dict[str, int] = {t.id: 0 for t in workflow.tasks}
         cache_hits = 0
         cache_misses = 0
 
-        tag_limits = self.config.max_concurrency_by_tag
+        tag_inflight: dict[str, int] = {k: 0 for k in tag_limits}
         tag_inflight: Dict[str, int] = {k: 0 for k in tag_limits}
 
         def can_run(t: TaskSpec) -> bool:
@@ -211,8 +211,7 @@ class Engine:
                     t = by_id[tid]
                     meta = getattr(fut, "_parallelx_meta", {})
                     started_at = float(meta.get("started_at") or now_ts())
-                    timeout = meta.get("timeout")
-
+        
                     try:
                         # Soft timeout: only effective if future has completed by now
                         value = fut.result(timeout=0)  # already done
@@ -267,7 +266,7 @@ class Engine:
                             finished_at=finished_at,
                             attempts=attempts[tid],
                         )
-                        fields: Dict[str, Any] = {
+                        fields: dict[str, Any] = {
                             "task_id": tid,
                             "attempt": attempts[tid],
                             "error_type": err.exc_type,
@@ -315,8 +314,8 @@ class Engine:
         return outcomes, summary
 
 
-def _collect_downstream(root: str, dependents: Dict[str, Set[str]]) -> Set[str]:
-    seen: Set[str] = set()
+def _collect_downstream(root: str, dependents: dict[str, set[str]]) -> set[str]:
+    seen: set[str] = set()
     stack = [root]
     while stack:
         u = stack.pop()
