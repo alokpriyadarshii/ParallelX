@@ -1,28 +1,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 
 @dataclass(frozen=True)
 class TaskSpec:
     id: str
     func: str
-    deps: List[str] = field(default_factory=list)
-    args: Dict[str, Any] = field(default_factory=dict)
+    deps: list[str] = field(default_factory=list)
+    args: dict[str, Any] = field(default_factory=dict)
     retries: int = 0
     retry_backoff_seconds: float = 0.0
-    timeout_seconds: Optional[float] = None
-    tags: List[str] = field(default_factory=list)
+    timeout_seconds: float | None = None
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
 class Workflow:
     name: str
-    tasks: List[TaskSpec]
+    tasks: list[TaskSpec]
 
-    def ids(self) -> Set[str]:
+    def ids(self) -> set[str]:
         return {t.id for t in self.tasks}
 
-    def by_id(self) -> Dict[str, TaskSpec]:
+    def by_id(self) -> dict[str, TaskSpec]:
         return {t.id: t for t in self.tasks}
