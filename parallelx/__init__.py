@@ -13,4 +13,4 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0"
 
-__all__ = ["Engine", "EngineConfig", "Workflow", "TaskSpec", "TaskStatus", "__version__"]
+__all__ = ["Engine", "EngineConfig", "TaskSpec", "TaskStatus", "Workflow", "__version__"]
