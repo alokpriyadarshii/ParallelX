@@ -6,9 +6,10 @@ import json
 import os
 import pickle
 import time
+from collections.abc import Callable
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, cast
 
 
 def import_func(path: str) -> Callable[..., Any]:
@@ -20,7 +21,7 @@ def import_func(path: str) -> Callable[..., Any]:
     fn = getattr(mod, fn_name, None)
     if fn is None or not callable(fn):
         raise ValueError(f"'{path}' does not resolve to a callable.")
-    return fn
+    return cast(Callable[..., Any], fn)
 
 
 def now_ts() -> float:
@@ -36,14 +37,14 @@ def stable_json(obj: Any) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
-def to_cache_key(func_path: str, resolved_kwargs: Dict[str, Any]) -> str:
+def to_cache_key(func_path: str, resolved_kwargs: dict[str, Any]) -> str:
     payload = {"func": func_path, "kwargs": _safe_for_hash(resolved_kwargs)}
     return sha256_bytes(stable_json(payload).encode("utf-8"))
 
 
 def _safe_for_hash(x: Any) -> Any:
     # Make best effort to convert to a deterministic, JSON-able structure.
-    if is_dataclass(x):
+    if is_dataclass(x) and not isinstance(x, type):
         return _safe_for_hash(asdict(x))
     if isinstance(x, (str, int, float, bool)) or x is None:
         return x
@@ -66,7 +67,7 @@ class DiskCache:
         # fan-out to reduce directory size
         return self.root / key[:2] / key[2:4] / f"{key}.pkl"
 
-    def get(self, key: str) -> Tuple[bool, Any]:
+    def get(self, key: str) -> tuple[bool, Any]:
         p = self._path(key)
         if not p.exists():
             return False, None
