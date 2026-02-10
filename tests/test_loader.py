@@ -1,10 +1,10 @@
 import unittest
 
-from parallelx.loader import parse_workflow, WorkflowValidationError
+from parallelx.loader import WorkflowValidationError, parse_workflow
 
 
 class TestLoader(unittest.TestCase):
-    def test_cycle_detected(self):
+    def test_cycle_detected(self) -> None:
         wf = {
             "name": "x",
             "tasks": [
@@ -15,7 +15,7 @@ class TestLoader(unittest.TestCase):
         with self.assertRaises(WorkflowValidationError):
             parse_workflow(wf)
 
-    def test_missing_dep(self):
+    def test_missing_dep(self) -> None:
         wf = {
             "tasks": [{"id": "a", "func": "parallelx.tasks:gen_numbers", "deps": ["nope"], "args": {"n": 1}}]
         }
