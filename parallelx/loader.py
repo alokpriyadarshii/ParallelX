@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .workflow import TaskSpec, Workflow
 
@@ -17,14 +17,14 @@ def load_workflow(path: str) -> Workflow:
     return parse_workflow(data, default_name=p.stem)
 
 
-def parse_workflow(data: Dict[str, Any], default_name: str = "workflow") -> Workflow:
+def parse_workflow(data: dict[str, Any], default_name: str = "workflow") -> Workflow:
     if not isinstance(data, dict):
         raise WorkflowValidationError("Workflow JSON must be an object.")
     name = str(data.get("name") or default_name)
     tasks_raw = data.get("tasks")
     if not isinstance(tasks_raw, list) or not tasks_raw:
         raise WorkflowValidationError("'tasks' must be a non-empty list.")
-    tasks: List[TaskSpec] = []
+    tasks: list[TaskSpec] = []
     seen: set[str] = set()
     for i, t in enumerate(tasks_raw):
         if not isinstance(t, dict):
@@ -74,19 +74,19 @@ def parse_workflow(data: Dict[str, Any], default_name: str = "workflow") -> Work
     return Workflow(name=name, tasks=tasks)
 
 
-def _assert_acyclic(tasks: List[TaskSpec]) -> None:
+def _assert_acyclic(tasks: list[TaskSpec]) -> None:
     by_id = {t.id: t for t in tasks}
     WHITE, GRAY, BLACK = 0, 1, 2
-    color: Dict[str, int] = {tid: WHITE for tid in by_id}
+    color: dict[str, int] = {tid: WHITE for tid in by_id}
 
-    def dfs(u: str, stack: List[str]) -> None:
+    def dfs(u: str, stack: list[str]) -> None:
         color[u] = GRAY
         stack.append(u)
         for v in by_id[u].deps:
             if color[v] == WHITE:
                 dfs(v, stack)
             elif color[v] == GRAY:
-                cycle = stack[stack.index(v):] + [v]
+                cycle = [*stack[stack.index(v):], v]
                 raise WorkflowValidationError(f"Cycle detected: {' -> '.join(cycle)}")
         stack.pop()
         color[u] = BLACK
