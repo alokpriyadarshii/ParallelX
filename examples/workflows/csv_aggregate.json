@@ -1,0 +1,10 @@
+{
+  "name": "numbers_sum_parallel",
+  "tasks": [
+    {"id": "a", "func": "parallelx.tasks:gen_numbers", "args": {"n": 5000000, "seed": 10}, "tags": ["cpu"]},
+    {"id": "b", "func": "parallelx.tasks:gen_numbers", "args": {"n": 5000000, "seed": 11}, "tags": ["cpu"]},
+    {"id": "sa", "func": "parallelx.tasks:sum_numbers", "deps": ["a"], "args": {"nums": {"ref": "a"}}, "tags": ["cpu"]},
+    {"id": "sb", "func": "parallelx.tasks:sum_numbers", "deps": ["b"], "args": {"nums": {"ref": "b"}}, "tags": ["cpu"]},
+    {"id": "total", "func": "parallelx.tasks:sum_numbers", "deps": ["sa","sb"], "args": {"nums": [{"ref":"sa"},{"ref":"sb"}]}, "tags": ["cpu"]}
+  ]
+}

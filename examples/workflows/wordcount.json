@@ -1,0 +1,38 @@
+{
+  "name": "wordcount_parallel",
+  "tasks": [
+    {
+      "id": "text",
+      "func": "parallelx.tasks:read_text",
+      "args": {"path": "examples/data/sample.txt"},
+      "tags": ["io"]
+    },
+    {
+      "id": "words",
+      "func": "parallelx.tasks:split_words",
+      "deps": ["text"],
+      "args": {"text": {"ref": "text"}},
+      "tags": ["cpu"]
+    },
+    {
+      "id": "chunks",
+      "func": "parallelx.tasks:chunk_list",
+      "deps": ["words"],
+      "args": {"items": {"ref": "words"}, "chunk_size": 5000},
+      "tags": ["cpu"]
+    },
+
+    {"id": "c0", "func": "parallelx.tasks:get_item", "deps": ["chunks"], "args": {"items": {"ref": "chunks"}, "index": 0}, "tags": ["cpu"]},
+    {"id": "c1", "func": "parallelx.tasks:get_item", "deps": ["chunks"], "args": {"items": {"ref": "chunks"}, "index": 1}, "tags": ["cpu"]},
+    {"id": "c2", "func": "parallelx.tasks:get_item", "deps": ["chunks"], "args": {"items": {"ref": "chunks"}, "index": 2}, "tags": ["cpu"]},
+    {"id": "c3", "func": "parallelx.tasks:get_item", "deps": ["chunks"], "args": {"items": {"ref": "chunks"}, "index": 3}, "tags": ["cpu"]},
+
+    {"id": "w0", "func": "parallelx.tasks:count_words", "deps": ["c0"], "args": {"words": {"ref": "c0"}}, "tags": ["cpu"]},
+    {"id": "w1", "func": "parallelx.tasks:count_words", "deps": ["c1"], "args": {"words": {"ref": "c1"}}, "tags": ["cpu"]},
+    {"id": "w2", "func": "parallelx.tasks:count_words", "deps": ["c2"], "args": {"words": {"ref": "c2"}}, "tags": ["cpu"]},
+    {"id": "w3", "func": "parallelx.tasks:count_words", "deps": ["c3"], "args": {"words": {"ref": "c3"}}, "tags": ["cpu"]},
+
+    {"id": "merged", "func": "parallelx.tasks:merge_counts_list", "deps": ["w0","w1","w2","w3"], "args": {"counts": [{"ref":"w0"},{"ref":"w1"},{"ref":"w2"},{"ref":"w3"}]}, "tags": ["cpu"]},
+    {"id": "save", "func": "parallelx.tasks:save_json", "deps": ["merged"], "args": {"data": {"ref": "merged"}, "path": "examples/data/wordcount_out.json"}, "tags": ["io"]}
+  ]
+}

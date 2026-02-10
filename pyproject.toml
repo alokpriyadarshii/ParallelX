@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parallelx"
+version = "1.0.0"
+description = "Production-grade parallel workflow engine for DAG tasks (parallel computing project)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "ParallelX"}]
+keywords = ["parallel", "workflow", "dag", "concurrency", "multiprocessing"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.5.0",
+  "mypy>=1.10.0",
+  "pre-commit>=3.7.0",
+  "pytest>=8.0.0",
+  "pytest-cov>=5.0.0",
+  "types-setuptools",
+]
+
+[project.urls]
+"Source" = "https://github.com/your-org/parallelx"
+"Documentation" = "https://github.com/your-org/parallelx#readme"
+
+[project.scripts]
+parallelx = "parallelx.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["parallelx*"]
+
+[tool.setuptools.package-data]
+parallelx = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true

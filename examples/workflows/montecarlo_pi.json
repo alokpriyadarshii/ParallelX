@@ -1,0 +1,17 @@
+{
+  "name": "montecarlo_pi_parallel",
+  "tasks": [
+    {"id": "p1", "func": "parallelx.tasks:random_points", "args": {"n": 800000, "seed": 1}, "tags": ["cpu"]},
+    {"id": "p2", "func": "parallelx.tasks:random_points", "args": {"n": 800000, "seed": 2}, "tags": ["cpu"]},
+    {"id": "p3", "func": "parallelx.tasks:random_points", "args": {"n": 800000, "seed": 3}, "tags": ["cpu"]},
+    {"id": "p4", "func": "parallelx.tasks:random_points", "args": {"n": 800000, "seed": 4}, "tags": ["cpu"]},
+
+    {"id": "c1", "func": "parallelx.tasks:count_inside_unit_circle", "deps": ["p1"], "args": {"points": {"ref": "p1"}}, "tags": ["cpu"]},
+    {"id": "c2", "func": "parallelx.tasks:count_inside_unit_circle", "deps": ["p2"], "args": {"points": {"ref": "p2"}}, "tags": ["cpu"]},
+    {"id": "c3", "func": "parallelx.tasks:count_inside_unit_circle", "deps": ["p3"], "args": {"points": {"ref": "p3"}}, "tags": ["cpu"]},
+    {"id": "c4", "func": "parallelx.tasks:count_inside_unit_circle", "deps": ["p4"], "args": {"points": {"ref": "p4"}}, "tags": ["cpu"]},
+
+    {"id": "total_inside", "func": "parallelx.tasks:sum_numbers", "deps": ["c1","c2","c3","c4"], "args": {"nums": [{"ref":"c1"},{"ref":"c2"},{"ref":"c3"},{"ref":"c4"}]}, "tags": ["cpu"]},
+    {"id": "pi", "func": "parallelx.tasks:estimate_pi", "deps": ["total_inside"], "args": {"inside": {"ref":"total_inside"}, "total": 3200000}, "tags": ["cpu"]}
+  ]
+}
