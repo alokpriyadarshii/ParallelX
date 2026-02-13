@@ -146,3 +146,15 @@ def _parse_float_field(
             f"Task '{task_id}': '{field_name}' must be >= {minimum}."
         )
     return value
+
+
+def _parse_optional_float_field(
+    task_id: str,
+    field_name: str,
+    raw: Any,
+    *,
+    minimum: float,
+) -> float | None:
+    if raw is None:
+        return None
+    return _parse_float_field(task_id, field_name, raw, default=0.0, minimum=minimum)
