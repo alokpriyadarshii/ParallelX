@@ -41,10 +41,16 @@ def parse_workflow(data: dict[str, Any], default_name: str = "workflow") -> Work
 
         deps = t.get("deps") or []
         args = t.get("args") or {}
-        retries = int(t.get("retries") or 0)
-        backoff = float(t.get("retry_backoff_seconds") or 0.0)
+        retries = _parse_int_field(tid, "retries", t.get("retries"), default=0, minimum=0)
+        backoff = _parse_float_field(
+            tid,
+            "retry_backoff_seconds",
+            t.get("retry_backoff_seconds"),
+            default=0.0,
+            minimum=0.0,
+        )
         timeout = t.get("timeout_seconds")
-        timeout_f = float(timeout) if timeout is not None else None
+        timeout_f = _parse_float_field(tid, "timeout_seconds", timeout, default=None, minimum=0.0)
         tags = t.get("tags") or []
         if not isinstance(deps, list) or any(not isinstance(d, str) for d in deps):
             raise WorkflowValidationError(f"Task '{tid}': 'deps' must be a list of strings.")
@@ -57,8 +63,8 @@ def parse_workflow(data: dict[str, Any], default_name: str = "workflow") -> Work
             func=func,
             deps=list(deps),
             args=dict(args),
-            retries=max(0, retries),
-            retry_backoff_seconds=max(0.0, backoff),
+            retries=retries,
+            retry_backoff_seconds=backoff,
             timeout_seconds=timeout_f,
             tags=list(tags),
         ))
@@ -94,3 +100,49 @@ def _assert_acyclic(tasks: list[TaskSpec]) -> None:
     for tid in by_id:
         if color[tid] == WHITE:
             dfs(tid, [])
+
+
+def _parse_int_field(
+    task_id: str,
+    field_name: str,
+    raw: Any,
+    *,
+    default: int,
+    minimum: int,
+) -> int:
+    if raw is None:
+        return default
+    if isinstance(raw, bool):
+        raise WorkflowValidationError(f"Task '{task_id}': '{field_name}' must be an integer.")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError) as e:
+        raise WorkflowValidationError(f"Task '{task_id}': '{field_name}' must be an integer.") from e
+    if value < minimum:
+        raise WorkflowValidationError(
+            f"Task '{task_id}': '{field_name}' must be >= {minimum}."
+        )
+    return value
+
+
+def _parse_float_field(
+    task_id: str,
+    field_name: str,
+    raw: Any,
+    *,
+    default: float | None,
+    minimum: float,
+) -> float | None:
+    if raw is None:
+        return default
+    if isinstance(raw, bool):
+        raise WorkflowValidationError(f"Task '{task_id}': '{field_name}' must be a number.")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError) as e:
+        raise WorkflowValidationError(f"Task '{task_id}': '{field_name}' must be a number.") from e
+    if value < minimum:
+        raise WorkflowValidationError(
+            f"Task '{task_id}': '{field_name}' must be >= {minimum}."
+        )
+    return value
