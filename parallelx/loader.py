@@ -49,6 +49,7 @@ def parse_workflow(data: dict[str, Any], default_name: str = "workflow") -> Work
             default=0.0,
             minimum=0.0,
         )
+        assert backoff is not None
         timeout = t.get("timeout_seconds")
         timeout_f = _parse_float_field(tid, "timeout_seconds", timeout, default=None, minimum=0.0)
         tags = t.get("tags") or []
